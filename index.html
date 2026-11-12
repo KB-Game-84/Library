@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Build a Snowman!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{--ink:#14284b;--frost:#e8f4ff;--carrot:#f28c28}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Fredoka,ui-rounded,"Segoe UI",system-ui,sans-serif;color:var(--ink);
+ background:linear-gradient(#0d1f42,#285593 55%,#bfe0ff) fixed;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.65;animation:fall 10s linear infinite;
+ background-image:radial-gradient(3px 3px at 20px 30px,#fff,transparent),radial-gradient(2px 2px at 90px 120px,#fff,transparent),radial-gradient(3px 3px at 160px 60px,#fff,transparent),radial-gradient(2px 2px at 60px 170px,#fff,transparent);background-size:200px 200px}
+@keyframes fall{to{background-position:-40px 200px}}
+@media(prefers-reduced-motion:reduce){body::before{animation:none}*{animation-duration:.01s!important}}
+#app{position:relative;max-width:1400px;margin:0 auto;padding:18px}
+h1{margin:0;color:#fff;font-size:clamp(26px,4vw,44px);font-weight:700;letter-spacing:.5px;text-shadow:0 3px 0 #0d1f42}
+.top{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+.status{background:var(--frost);border-radius:999px;padding:8px 20px;font-weight:600;font-size:clamp(16px,2.2vw,24px)}
+.card{background:#fff;border-radius:26px;padding:20px;box-shadow:0 8px 0 rgba(13,31,66,.25)}
+.btn{font:inherit;font-weight:600;font-size:20px;border:0;border-radius:18px;padding:14px 26px;background:var(--carrot);color:#fff;cursor:pointer;box-shadow:0 5px 0 #b35f0b;transition:transform .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #b35f0b}
+.btn:disabled{background:#9db1cc;box-shadow:0 5px 0 #6f84a3;cursor:default}
+.btn.alt{background:var(--frost);color:var(--ink);box-shadow:0 5px 0 #9db1cc}
+.btn.alt.on{background:var(--ink);color:#fff;box-shadow:0 5px 0 #000}
+.lobby{display:grid;gap:22px;max-width:760px;margin:0 auto}
+.join{display:flex;gap:22px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.code{font-size:clamp(56px,10vw,96px);line-height:1;letter-spacing:10px;color:var(--carrot)}
+.join small{display:block;color:#5a6f92;word-break:break-all}
+.modes{display:flex;gap:12px;flex-wrap:wrap}.modes .btn{flex:1;min-width:200px}
+.chips{display:flex;gap:10px;flex-wrap:wrap;min-height:48px}
+.chip{padding:8px 18px;border-radius:999px;color:#fff;font-weight:600;font-size:20px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.pc{text-align:center;border:6px solid var(--c);padding:12px}
+.pc.off{opacity:.45}.pc.turn{transform:scale(1.04);box-shadow:0 0 0 6px #ffd23f,0 8px 0 rgba(13,31,66,.25)}
+.pc h3{margin:0;font-size:24px}.pc .st{font-size:16px;color:#5a6f92;min-height:22px}
+.pc .got{font-size:22px;min-height:30px;letter-spacing:3px}
+.flash{animation:pop .7s}@keyframes pop{30%{transform:scale(1.1) rotate(-2deg)}}
+.over{position:fixed;inset:0;display:grid;place-items:center;background:rgba(13,31,66,.7);z-index:5;padding:20px}
+.over .card{text-align:center;max-width:560px}.over h2{font-size:clamp(34px,6vw,60px);margin:0 0 12px}
+#fx{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.6);opacity:0;pointer-events:none;transition:.25s;z-index:9;
+ text-align:center;background:#fff;padding:24px 34px;border-radius:30px;box-shadow:0 10px 0 rgba(13,31,66,.3);max-width:92vw}
+#fx.show{opacity:1;transform:translate(-50%,-50%) scale(1)}#fx p{margin:12px 0 0;font-size:clamp(18px,3vw,28px);font-weight:600;min-height:34px}
+.die{display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);width:clamp(96px,16vw,140px);aspect-ratio:1;margin:auto;padding:14%;background:#fff;border:5px solid var(--ink);border-radius:22%}
+.die i{display:block;width:70%;height:70%;margin:auto;border-radius:50%}.die i.on{background:var(--ink)}
+.phone{max-width:480px;margin:0 auto;text-align:center;display:grid;gap:14px}
+.phone .card{padding:14px}
+.phone input{font:inherit;font-size:24px;width:100%;padding:14px;border-radius:16px;border:3px solid var(--ink);text-align:center;margin-bottom:14px}
+.roll{width:100%;font-size:34px;padding:24px;border-radius:26px}
+.parts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.parts span{padding:8px 4px;border-radius:14px;background:#eaf0f8;color:#8a9bb8;font-size:15px}
+.parts span.have{background:#d9f7e3;color:#126b34;font-weight:600}
+.hint{color:#fff;font-weight:600;font-size:20px;min-height:28px}.err{color:#ffd0d0;font-weight:600}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="fx"><div class="die"></div><p></p></div>
+<script>
+const NAMES=['Carrot nose','Eyes','Scarf','Smile','Hat','Arms'],ICON=['🥕','👀','🧣','😊','🎩','🌿'];
+const PIPS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+const $=s=>document.querySelector(s),app=$('#app');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const api=async b=>{const r=await fetch('/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});const j=await r.json();if(!r.ok)throw j.error||'Something went wrong';return j};
+const room=new URLSearchParams(location.search).get('room'),isHost=!room;
+let S=null,pending=null,seen=0,first=true,hold=0,rt,flash=null,hk=null,me=null,qrEl=null,msg='';
+
+/* ---------- Snowman (theme: parts are drawn when rolled) ---------- */
+function snowman(parts,color,w){
+  const h=new Set(parts),st='stroke="#14284b" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"';
+  return `<svg viewBox="0 0 200 300" width="${w}" role="img" aria-label="Snowman with ${h.size} of 6 parts">`+
+  (h.has(6)?`<path d="M62 140 L22 112 M38 122 L30 100 M30 117 L16 120 M138 140 L178 112 M162 122 L170 100 M170 117 L184 120" stroke="#7a4a21" stroke-width="5" fill="none" stroke-linecap="round"/>`:'')+
+  `<g fill="#fff" ${st}><circle cx="100" cy="230" r="60"/><circle cx="100" cy="142" r="46"/><circle cx="100" cy="68" r="33"/></g>`+
+  (h.has(3)?`<g fill="${color}" ${st}><rect x="66" y="96" width="68" height="15" rx="7"/><path d="M114 108 L126 108 L130 142 L112 142 Z"/></g>`:'')+
+  (h.has(5)?`<g fill="#222" ${st}><path d="M80 30 V4 H120 V30 Z"/><rect x="68" y="29" width="64" height="9" rx="3"/><rect x="80" y="17" width="40" height="8" fill="${color}" stroke="none"/></g>`:'')+
+  (h.has(2)?`<g fill="#14284b"><circle cx="89" cy="58" r="3.8"/><circle cx="111" cy="58" r="3.8"/></g>`:'')+
+  (h.has(1)?`<path d="M100 68 L138 74 L100 80 Z" fill="#f28c28" ${st}/>`:'')+
+  (h.has(4)?`<g fill="#14284b"><circle cx="84" cy="84" r="2.5"/><circle cx="91" cy="90" r="2.5"/><circle cx="100" cy="92" r="2.5"/><circle cx="109" cy="90" r="2.5"/><circle cx="116" cy="84" r="2.5"/></g>`:'')+
+  `</svg>`;
+}
+
+/* ---------- Dice roll overlay ---------- */
+const pips=(d,n)=>{d.innerHTML=[...Array(9).keys()].map(i=>`<i${PIPS[n].includes(i)?' class="on"':''}></i>`).join('')};
+let fxT;
+function fx(n,cap){const o=$('#fx'),d=o.querySelector('.die'),c=o.querySelector('p');clearTimeout(fxT);o.classList.add('show');c.textContent='';let t=0;
+  const iv=setInterval(()=>{pips(d,1+Math.random()*6|0);if(++t>8){clearInterval(iv);pips(d,n);c.textContent=cap;fxT=setTimeout(()=>o.classList.remove('show'),1800)}},80)}
+
+/* ---------- State plumbing ---------- */
+function connect(q){
+  const es=new EventSource('/events?'+q);
+  es.onmessage=e=>incoming(JSON.parse(e.data));
+  es.onerror=()=>{if(es.readyState===2){if(isHost){localStorage.removeItem('snowHost');location.reload()}else{S=null;msg='This room has ended. Ask the host for a new code.';draw()}}};
+}
+function incoming(n){
+  pending=n;const L=n.last;
+  if(first){seen=L?L.seq:0;first=false}
+  else if(L&&L.seq>seen){
+    seen=L.seq;const p=n.players.find(p=>p.id===L.id);
+    if(isHost){fx(L.n,`${p.name} rolled ${L.n}: ${NAMES[L.n-1]}${L.isNew?'!':' (already has it)'}`);hold=Date.now()+1000;if(L.isNew){flash=L.id;setTimeout(()=>flash=null,1600)}}
+    else if(me&&L.id===me.id){navigator.vibrate&&navigator.vibrate(60);fx(L.n,L.isNew?`You got: ${ICON[L.n-1]} ${NAMES[L.n-1]}!`:`${NAMES[L.n-1]} — you already have it`);hold=Date.now()+1000}
+  }
+  clearTimeout(rt);rt=setTimeout(()=>{S=pending;draw()},Math.max(0,hold-Date.now()));
+}
+const draw=()=>isHost?drawHost():drawPhone();
+const nameOf=id=>(S.players.find(p=>p.id===id)||{}).name;
+
+/* ---------- Host screen (iPad / laptop) ---------- */
+function drawHost(){
+  if(!S){app.innerHTML='<h1>⛄ Build a Snowman!</h1><p class="hint">Setting up your room…</p>';return}
+  const url=`${location.origin}/?room=${S.code}`;
+  const head=`<div class="top"><h1>⛄ Build a Snowman!</h1>`;
+  if(S.phase==='lobby'){
+    app.innerHTML=head+`</div><div class="card lobby">
+      <div class="join"><div><div>Join on your phone with room code</div><b class="code">${S.code}</b><small>${esc(url)}</small></div><div id="qr"></div></div>
+      <div class="modes"><button class="btn alt ${S.mode==='simul'?'on':''}" data-a="mode" data-v="simul">Everyone rolls together</button>
+      <button class="btn alt ${S.mode==='turns'?'on':''}" data-a="mode" data-v="turns">Take turns</button></div>
+      <div class="chips">${S.players.length?S.players.map(p=>`<span class="chip" style="background:${p.color}">${esc(p.name)}</span>`).join(''):'<span>Waiting for players to join…</span>'}</div>
+      <button class="btn" data-a="start" ${S.players.length?'':'disabled'}>Start game</button></div>`;
+    if(!qrEl&&window.QRCode){qrEl=document.createElement('div');try{new QRCode(qrEl,{text:url,width:150,height:150})}catch(e){qrEl=null}}
+    if(qrEl)$('#qr').appendChild(qrEl);
+    return;
+  }
+  const w=S.players.length<=2?240:S.players.length<=4?190:150;
+  const status=S.mode==='simul'?`Round ${S.round} · everyone rolls once`:`${esc(S.players[S.turn].name)}'s turn`;
+  app.innerHTML=head+`<div class="status">${status}</div></div><div class="grid">`+S.players.map((p,i)=>{
+    const turn=S.mode==='turns'&&i===S.turn&&S.phase==='play';
+    const st=!p.on?'disconnected':S.mode==='simul'?(p.rolled?'✓ rolled':'waiting…'):(turn?(p.rolled?'✓ rolled':'rolling…'):'');
+    return `<div class="card pc ${p.on?'':'off'} ${turn?'turn':''} ${flash===p.id?'flash':''}" style="--c:${p.color}"><h3>${esc(p.name)}</h3>${snowman(p.parts,p.color,w)}
+      <div class="got">${p.parts.sort().map(n=>ICON[n-1]).join('')}</div><div class="st">${p.parts.length}/6 · ${st}</div></div>`}).join('')+`</div>`;
+  if(S.phase==='over'){
+    const names=S.winners.map(nameOf).map(esc);
+    app.insertAdjacentHTML('beforeend',`<div class="over"><div class="card"><h2>🏆 ${names.length>1?names.join(' & ')+' tie!':names[0]+' wins!'}</h2>
+      <p>${names.length>1?'They finished in the same round.':'First snowman complete!'}</p><button class="btn" data-a="again">Play again</button></div></div>`);
+  }
+}
+app.onclick=async e=>{
+  const a=e.target.closest('[data-a]');if(!a||!isHost)return;
+  try{await api({a:a.dataset.a,room:S.code,hostKey:hk,mode:a.dataset.v})}catch(x){alert(x)}
+};
+
+/* ---------- Phone controller ---------- */
+function drawPhone(){
+  const top=`<div class="top"><h1>⛄ Snowman</h1></div>`;
+  if(!me){
+    app.innerHTML=top+`<div class="phone"><div class="card"><p>Room <b>${esc(room)}</b></p><input id="nm" maxlength="14" placeholder="Your name" autocomplete="off"><button class="btn roll" id="go">Join game</button></div>${msg?`<p class="err">${esc(msg)}</p>`:''}</div>`;
+    $('#go').onclick=join;$('#nm').onkeydown=e=>{if(e.key==='Enter')join()};return;
+  }
+  if(!S){app.innerHTML=top+`<p class="hint ${msg?'err':''}">${esc(msg||'Connecting…')}</p>`;return}
+  const p=S.players.find(p=>p.id===me.id);
+  if(!p){app.innerHTML=top+'<p class="hint err">You are not in this game.</p>';return}
+  const myTurn=S.mode==='simul'||S.players[S.turn].id===p.id;
+  const can=S.phase==='play'&&!S.busy&&!p.rolled&&myTurn;
+  let hint='';
+  if(S.phase==='lobby')hint=`Hi ${esc(p.name)}! Waiting for the host to start…`;
+  else if(S.phase==='over')hint=S.winners.includes(p.id)?'🏆 You won!':`${esc(S.winners.map(nameOf).join(' & '))} won this time.`;
+  else if(S.mode==='simul')hint=p.rolled?'Nice! Waiting for the others…':`Round ${S.round}: tap to roll!`;
+  else hint=myTurn?(p.rolled?'Nice roll!':'Your turn — tap to roll!'):`${esc(S.players[S.turn].name)} is rolling…`;
+  app.innerHTML=top+`<div class="phone"><div class="hint">${hint}</div><div class="card ${flash===p.id?'flash':''}" style="border:6px solid ${p.color}">${snowman(p.parts,p.color,200)}</div>
+    <div class="parts">${NAMES.map((n,i)=>`<span class="${p.parts.includes(i+1)?'have':''}">${ICON[i]} ${n}</span>`).join('')}</div>
+    ${S.phase==='play'?`<button class="btn roll" id="roll" ${can?'':'disabled'}>🎲 Roll</button>`:''}</div>`;
+  const r=$('#roll');if(r)r.onclick=()=>{r.disabled=true;api({a:'roll',room,key:me.key}).catch(x=>{msg=x;draw()})};
+}
+async function join(){
+  const name=$('#nm').value;
+  try{const j=await api({a:'join',room,name});start(j)}catch(x){msg=x;drawPhone()}
+}
+function start(j){me=j;msg='';localStorage['snow_'+room]=JSON.stringify(j);draw();connect(`room=${room}&key=${j.key}`)}
+
+/* ---------- Boot ---------- */
+(async()=>{
+  if(isHost){
+    draw();
+    const saved=JSON.parse(localStorage.snowHost||'null')||{};
+    const h=await api({a:'host',code:saved.code,hostKey:saved.hostKey});
+    localStorage.snowHost=JSON.stringify(h);hk=h.hostKey;connect(`room=${h.code}`);
+  }else{
+    const saved=JSON.parse(localStorage['snow_'+room]||'null');
+    if(saved){try{start(await api({a:'join',room,key:saved.key}))}catch(x){msg=x;drawPhone()}}else drawPhone();
+  }
+})();
+</script>
+</body>
+</html>

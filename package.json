@@ -1,0 +1,7 @@
+{
+  "name": "dice-build-party",
+  "version": "1.0.0",
+  "description": "Phone-controlled dice-build party game (host screen + phone controllers)",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}
