@@ -120,8 +120,8 @@ function drawHost(){
       <div class="card join"><div><div>Join on your phone with code</div><b class="code">${S.code}</b><small>${esc(url)}</small></div><div id="qr"></div></div>
       <div class="card"><b>Settings</b>
         <label>Token value (e.g. 1, £1, 50p)<input type="text" maxlength="8" data-set="value" value="${esc(S.set.value)}"></label>
-        <label>Rounds<input type="number" min="1" max="20" data-set="rounds" value="${S.set.rounds}"></label>
-        <label>Starting tokens each<input type="number" min="1" max="10" data-set="start" value="${S.set.start}"></label>
+        <label>Rounds<input type="text" inputmode="numeric" maxlength="2" data-set="rounds" value="${S.set.rounds}"></label>
+        <label>Starting tokens each<input type="text" inputmode="numeric" maxlength="2" data-set="start" value="${S.set.start}"></label>
       </div>
       <div class="card"><b>Seating (clockwise from the top)</b>
         ${N?S.players.map(p=>`<div class="prow"><select data-seat="${p.id}">${S.players.map((_,i)=>`<option ${p.seat===i+1?'selected':''}>${i+1}</option>`).join('')}</select><b>${esc(p.name)}${p.on?'':' ⚠'}</b><button class="btn alt sm" data-a="kick" data-id="${p.id}">✕</button></div>`).join(''):'<p>Waiting for players to join…</p>'}
