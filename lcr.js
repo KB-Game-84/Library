@@ -19,8 +19,8 @@ function startRound(r) {
 function finish(r, i) {
   const s = seated(r), alive = s.filter(p => p.tokens > 0);
   if (alive.length === 1) {
-    const w = alive[0], prize = w.tokens + (r.set.pot ? r.pot : 0);
-    w.wins++; r.history.push({ round: r.round, id: w.id, name: w.name, tokens: prize }); r.phase = 'roundover';
+    const w = alive[0];
+    w.wins++; r.history.push({ round: r.round, id: w.id, name: w.name }); r.phase = 'roundover';
   } else {
     for (let k = 1; k <= s.length; k++) { const q = s[(i + k) % s.length]; if (q.tokens > 0) { r.turn = q.id; break; } }
   }
@@ -43,7 +43,7 @@ const A = {
   host(b) {
     let r = X.rooms.get(b.code);
     if (r && r.hostKey === b.hostKey) return { code: r.code, hostKey: r.hostKey };
-    r = { game: 'lcr', code: X.newCode(), hostKey: X.tok(), phase: 'lobby', set: { value: '1', rounds: 3, start: 3, pot: true }, round: 1, turn: null,
+    r = { game: 'lcr', code: X.newCode(), hostKey: X.tok(), phase: 'lobby', set: { value: '1', rounds: 3, start: 3 }, round: 1, turn: null,
       pot: 0, last: null, busy: false, history: [], players: [], clients: new Set(), seq: 0, timer: null, touch: Date.now() };
     X.rooms.set(r.code, r);
     return { code: r.code, hostKey: r.hostKey };
@@ -66,7 +66,6 @@ const A = {
     if (b.value !== undefined) s.value = String(b.value).trim().slice(0, 8) || '1';
     if (b.rounds !== undefined) s.rounds = clamp(b.rounds, 1, 20, 3);
     if (b.start !== undefined) s.start = clamp(b.start, 1, 10, 3);
-    if (b.pot !== undefined) s.pot = !!b.pot;
     X.push(r);
   },
   seat(b, r) {

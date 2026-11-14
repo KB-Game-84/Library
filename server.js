@@ -120,7 +120,7 @@ http.createServer((q, s) => {
     return;
   }
   const route = u.pathname.replace(/\/+$/, '') || '/';
-  if (route === '/version') { s.writeHead(200, { 'Content-Type': 'text/plain' }); return s.end('server v4: hub at /, Dice Draw at /dice-draw, LCR at /lcr'); }
+  if (route === '/version') { s.writeHead(200, { 'Content-Type': 'text/plain' }); return s.end('server v5: hub at /, Dice Draw at /dice-draw, LCR at /lcr'); }
   if (route === '/lcr' || route === '/lcr.html') { s.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return s.end(lcrPage); }
   const dice = route === '/dice-draw' || (route === '/' && u.searchParams.has('room')); // old phone links (/?room=) still reach Dice Draw
   s.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); s.end(dice ? page : hub);
