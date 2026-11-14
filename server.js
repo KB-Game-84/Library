@@ -7,7 +7,7 @@ const newCode = () => { let c; do { c = Array.from({ length: 4 }, () => 'ABCDEFG
 const page = fs.readFileSync(path.join(__dirname, 'index.html'));
 const full = p => p.parts.size >= PARTS;
 
-const view = r => ({ code: r.code, mode: r.mode, phase: r.phase, round: r.round, turn: r.turn, last: r.last, winners: r.winners, busy: r.busy,
+const view = r => ({ code: r.code, theme: r.theme, mode: r.mode, phase: r.phase, round: r.round, turn: r.turn, last: r.last, winners: r.winners, busy: r.busy,
   players: r.players.map(p => ({ id: p.id, name: p.name, color: p.color, parts: [...p.parts], rolled: p.rolled, on: p.on })) });
 const push = r => { r.touch = Date.now(); const s = 'data: ' + JSON.stringify(view(r)) + '\n\n'; r.clients.forEach(c => c.res.write(s)); };
 const presence = r => r.players.forEach(p => { p.on = [...r.clients].some(c => c.key === p.key); });
@@ -53,7 +53,7 @@ const A = {
   host(b) {
     let r = rooms.get(b.code);
     if (r && r.hostKey === b.hostKey) return { code: r.code, hostKey: r.hostKey };
-    r = { code: newCode(), hostKey: tok(), mode: 'simul', phase: 'lobby', round: 1, turn: 0, last: null, winners: [], busy: false,
+    r = { code: newCode(), hostKey: tok(), theme: 'snowman', mode: 'simul', phase: 'lobby', round: 1, turn: 0, last: null, winners: [], busy: false,
       players: [], clients: new Set(), seq: 0, timer: null, touch: Date.now() };
     rooms.set(r.code, r);
     return { code: r.code, hostKey: r.hostKey };
@@ -71,6 +71,7 @@ const A = {
     push(r); return { key: p.key, id: p.id, name: p.name };
   },
   mode(b, r) { hostOnly(r, b); if (r.phase === 'lobby') r.mode = b.mode === 'turns' ? 'turns' : 'simul'; push(r); },
+  theme(b, r) { hostOnly(r, b); if (r.phase === 'lobby' && /^[a-z]{2,12}$/.test(b.theme || '')) r.theme = b.theme; push(r); },
   start(b, r) { hostOnly(r, b); if (!r.players.length) throw 'Waiting for players'; clear(r); r.phase = 'play'; presence(r); push(r); settle(r); },
   again(b, r) { hostOnly(r, b); clear(r); r.phase = 'lobby'; push(r); },
   roll(b, r) {

@@ -50,9 +50,13 @@ h1{margin:0;color:#fff;font-size:clamp(26px,4vw,44px);font-weight:700;letter-spa
 .phone .card{padding:14px}
 .phone input{font:inherit;font-size:24px;width:100%;padding:14px;border-radius:16px;border:3px solid var(--ink);text-align:center;margin-bottom:14px}
 .roll{width:100%;font-size:34px;padding:24px;border-radius:26px}
-.parts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.parts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .parts span{padding:8px 4px;border-radius:14px;background:#eaf0f8;color:#8a9bb8;font-size:15px}
 .parts span.have{background:#d9f7e3;color:#126b34;font-weight:600}
+.themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.themes .btn{font-size:17px;padding:10px 8px}
+.no{display:inline-grid;place-items:center;width:1.5em;height:1.5em;border-radius:50%;background:var(--ink);color:#fff;font-size:.9em;margin-right:2px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;justify-content:center;background:var(--frost);border-radius:20px;padding:10px 16px;margin-bottom:16px;font-weight:600;font-size:clamp(14px,1.8vw,20px)}
+.parts span{display:flex;align-items:center;justify-content:flex-start;gap:6px;text-align:left;font-size:16px;padding:8px 10px}
 .hint{color:#fff;font-weight:600;font-size:20px;min-height:28px}.err{color:#ffd0d0;font-weight:600}
 </style>
 </head>
@@ -60,7 +64,6 @@ h1{margin:0;color:#fff;font-size:clamp(26px,4vw,44px);font-weight:700;letter-spa
 <div id="app"></div>
 <div id="fx"><div class="die"></div><p></p></div>
 <script>
-const NAMES=['Carrot nose','Eyes','Scarf','Smile','Hat','Arms'],ICON=['🥕','👀','🧣','😊','🎩','🌿'];
 const PIPS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 const $=s=>document.querySelector(s),app=$('#app');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -68,18 +71,124 @@ const api=async b=>{const r=await fetch('/api',{method:'POST',headers:{'Content-
 const room=new URLSearchParams(location.search).get('room'),isHost=!room;
 let S=null,pending=null,seen=0,first=true,hold=0,rt,flash=null,hk=null,me=null,qrEl=null,msg='';
 
-/* ---------- Snowman (theme: parts are drawn when rolled) ---------- */
-function snowman(parts,color,w){
-  const h=new Set(parts),st='stroke="#14284b" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"';
-  return `<svg viewBox="0 0 200 300" width="${w}" role="img" aria-label="Snowman with ${h.size} of 6 parts">`+
-  (h.has(6)?`<path d="M62 140 L22 112 M38 122 L30 100 M30 117 L16 120 M138 140 L178 112 M162 122 L170 100 M170 117 L184 120" stroke="#7a4a21" stroke-width="5" fill="none" stroke-linecap="round"/>`:'')+
-  `<g fill="#fff" ${st}><circle cx="100" cy="230" r="60"/><circle cx="100" cy="142" r="46"/><circle cx="100" cy="68" r="33"/></g>`+
-  (h.has(3)?`<g fill="${color}" ${st}><rect x="66" y="96" width="68" height="15" rx="7"/><path d="M114 108 L126 108 L130 142 L112 142 Z"/></g>`:'')+
-  (h.has(5)?`<g fill="#222" ${st}><path d="M80 30 V4 H120 V30 Z"/><rect x="68" y="29" width="64" height="9" rx="3"/><rect x="80" y="17" width="40" height="8" fill="${color}" stroke="none"/></g>`:'')+
-  (h.has(2)?`<g fill="#14284b"><circle cx="89" cy="58" r="3.8"/><circle cx="111" cy="58" r="3.8"/></g>`:'')+
-  (h.has(1)?`<path d="M100 68 L138 74 L100 80 Z" fill="#f28c28" ${st}/>`:'')+
-  (h.has(4)?`<g fill="#14284b"><circle cx="84" cy="84" r="2.5"/><circle cx="91" cy="90" r="2.5"/><circle cx="100" cy="92" r="2.5"/><circle cx="109" cy="90" r="2.5"/><circle cx="116" cy="84" r="2.5"/></g>`:'')+
-  `</svg>`;
+/* ---------- Themes: each has a base picture + 6 parts (drawn when rolled) ---------- */
+const lett='<path d="M28 198 q12 -14 24 0 t24 0 t24 0 t24 0 t24 0 t24 0 V208 H28Z" fill="#6cc04a"/>';
+const plate='<ellipse cx="100" cy="268" rx="84" ry="10" fill="#dfe6ee" stroke="none"/>';
+const THEMES=[
+{id:'snowman',t:'Snowman',e:'⛄',b:[5],
+ n:['Carrot nose','Eyes','Scarf','Smile','Hat','Arms'],i:['🥕','👀','🧣','😊','🎩','🌿'],
+ base:'<g fill="#fff"><circle cx="100" cy="230" r="60"/><circle cx="100" cy="142" r="46"/><circle cx="100" cy="68" r="33"/></g>',
+ p:[c=>'<path d="M100 68 L138 74 L100 80Z" fill="#f28c28"/>',
+  c=>'<g fill="#14284b" stroke="none"><circle cx="89" cy="58" r="3.8"/><circle cx="111" cy="58" r="3.8"/></g>',
+  c=>`<g fill="${c}"><rect x="66" y="96" width="68" height="15" rx="7"/><path d="M114 108 L126 108 L130 142 L112 142Z"/></g>`,
+  c=>'<g fill="#14284b" stroke="none"><circle cx="84" cy="84" r="2.5"/><circle cx="91" cy="90" r="2.5"/><circle cx="100" cy="92" r="2.5"/><circle cx="109" cy="90" r="2.5"/><circle cx="116" cy="84" r="2.5"/></g>',
+  c=>`<g fill="#222"><path d="M80 30 V4 H120 V30Z"/><rect x="68" y="29" width="64" height="9" rx="3"/><rect x="80" y="17" width="40" height="8" fill="${c}" stroke="none"/></g>`,
+  c=>'<path d="M62 140 L22 112 M38 122 L30 100 M30 117 L16 120 M138 140 L178 112 M162 122 L170 100 M170 117 L184 120" stroke="#7a4a21" stroke-width="5"/>']},
+{id:'cake',t:'Birthday Cake',e:'🎂',
+ n:['Bottom tier','Top tier','Icing','Candles','Flames','Sprinkles'],i:['🍰','🎂','🍦','🕯️','🔥','🎉'],
+ base:'<ellipse cx="100" cy="266" rx="86" ry="12" fill="#dfe6ee" stroke="none"/>',
+ p:[c=>'<rect x="36" y="206" width="128" height="58" rx="8" fill="#f4b6cf"/>',
+  c=>`<rect x="62" y="156" width="76" height="52" rx="8" fill="${c}"/>`,
+  c=>'<path d="M36 214 q8 14 16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 V204 H36Z" fill="#fff"/><path d="M62 162 q9.5 13 19 0 t19 0 t19 0 t19 0 V154 H62Z" fill="#fff"/>',
+  c=>'<g fill="#5bc0eb"><rect x="80" y="118" width="9" height="36"/><rect x="96" y="118" width="9" height="36"/><rect x="112" y="118" width="9" height="36"/></g>',
+  c=>'<g fill="#ffb703"><path d="M84.5 98 q-9 11 0 18 q9 -7 0 -18Z"/><path d="M100.5 98 q-9 11 0 18 q9 -7 0 -18Z"/><path d="M116.5 98 q-9 11 0 18 q9 -7 0 -18Z"/></g>',
+  c=>'<g stroke="none"><circle cx="54" cy="232" r="3.5" fill="#e63946"/><circle cx="82" cy="246" r="3.5" fill="#2a9d8f"/><circle cx="112" cy="234" r="3.5" fill="#ffd23f"/><circle cx="142" cy="248" r="3.5" fill="#6a4c93"/><circle cx="100" cy="176" r="4" fill="#e63946"/><circle cx="76" cy="190" r="3.5" fill="#2a9d8f"/><circle cx="124" cy="188" r="3.5" fill="#ffd23f"/></g>']},
+{id:'pizza',t:'Pizza',e:'🍕',
+ n:['Crust','Sauce','Cheese','Pepperoni','Olives','Slices'],i:['🍞','🍅','🧀','🍖','🫒','🔪'],
+ base:'<rect x="8" y="58" width="184" height="184" rx="22" fill="#c9a27a"/>',
+ p:[c=>'<circle cx="100" cy="150" r="82" fill="#e3a84e"/>',
+  c=>'<circle cx="100" cy="150" r="68" fill="#d8402f"/>',
+  c=>'<circle cx="100" cy="150" r="62" fill="#ffd86b" stroke="none"/>',
+  c=>'<g fill="#b3261e"><circle cx="78" cy="118" r="12"/><circle cx="124" cy="128" r="12"/><circle cx="100" cy="166" r="12"/><circle cx="66" cy="172" r="12"/><circle cx="134" cy="178" r="12"/></g>',
+  c=>'<g fill="#2b2b2b" stroke-width="2"><circle cx="104" cy="108" r="6"/><circle cx="152" cy="150" r="6"/><circle cx="84" cy="146" r="6"/><circle cx="112" cy="146" r="6"/></g>',
+  c=>'<path d="M100 68 V232 M18 150 H182 M42 92 L158 208 M158 92 L42 208" stroke-width="2.5" opacity=".55"/>']},
+{id:'burger',t:'Burger',e:'🍔',
+ n:['Bottom bun','Patty','Cheese','Lettuce','Tomato','Top bun'],i:['🍞','🥩','🧀','🥬','🍅','🍔'],
+ base:plate,
+ p:[c=>'<path d="M34 240 H166 q0 24 -22 24 H56 q-22 0 -22 -24Z" fill="#e0a050"/>',
+  c=>'<rect x="30" y="212" width="140" height="30" rx="15" fill="#6b3a1e"/>',
+  c=>'<path d="M32 204 H168 V214 H146 L130 232 L114 214 H32Z" fill="#ffc928"/>',
+  c=>lett,
+  c=>'<g fill="#e63946"><ellipse cx="70" cy="188" rx="26" ry="9"/><ellipse cx="128" cy="188" rx="26" ry="9"/></g>',
+  c=>`<path d="M34 182 q0 -74 66 -74 q66 0 66 74Z" fill="#e0a050"/><g fill="#fff" stroke="none"><ellipse cx="78" cy="140" rx="5" ry="2.5"/><ellipse cx="104" cy="126" rx="5" ry="2.5"/><ellipse cx="128" cy="146" rx="5" ry="2.5"/><ellipse cx="100" cy="160" rx="5" ry="2.5"/></g>`]},
+{id:'car',t:'Car',e:'🚗',
+ n:['Body','Wheels','Windows','Lights','Spoiler','Stripe'],i:['🚗','⚫','🪟','💡','🏎️','🏁'],
+ base:'<rect x="0" y="226" width="200" height="14" rx="4" fill="#9aa5b1"/>',
+ p:[c=>`<path d="M12 200 V166 q0 -10 12 -12 L58 148 L80 116 H140 L164 148 L184 156 q6 4 6 14 V200Z" fill="${c}"/>`,
+  c=>'<g fill="#222"><circle cx="56" cy="204" r="21"/><circle cx="148" cy="204" r="21"/></g><g fill="#ccc" stroke-width="2"><circle cx="56" cy="204" r="8"/><circle cx="148" cy="204" r="8"/></g>',
+  c=>'<g fill="#bfe6ff"><path d="M86 122 H104 V148 H66Z"/><path d="M112 122 H138 L158 148 H112Z"/></g>',
+  c=>'<rect x="180" y="162" width="10" height="14" rx="3" fill="#ffe066"/><rect x="10" y="162" width="8" height="14" rx="3" fill="#e63946"/>',
+  c=>'<g fill="#222"><rect x="6" y="126" width="40" height="8" rx="3"/><rect x="14" y="134" width="6" height="22"/></g>',
+  c=>'<rect x="22" y="174" width="156" height="9" fill="#fff" stroke="none"/>']},
+{id:'mobile',t:'Baby Mobile',e:'👶',h:'Build a Baby Mobile!',
+ n:['Hub & arm','Strings','Moon','Star','Cloud','Heart'],i:['⭕','🧵','🌙','⭐','☁️','💗'],
+ base:'<rect x="66" y="2" width="68" height="8" rx="3" fill="#dfe6ee"/>',
+ p:[c=>`<path d="M100 10 V52"/><path d="M20 62 H180" stroke-width="5"/><circle cx="100" cy="58" r="9" fill="${c}"/>`,
+  c=>'<path d="M26 64 V130 M76 64 V160 M124 64 V140 M174 64 V180" stroke-width="2"/>',
+  c=>'<path d="M38 132 A22 22 0 1 0 38 168 A17 17 0 0 1 38 132Z" fill="#ffd86b"/>',
+  c=>`<path d="M76 160 L82 176 L99 176 L85 186 L90 203 L76 193 L62 203 L67 186 L53 176 L70 176Z" fill="${c}"/>`,
+  c=>'<path d="M106 174 a12 12 0 0 1 4 -23 a16 16 0 0 1 30 -2 a13 13 0 0 1 8 25Z" fill="#cfe8ff"/>',
+  c=>'<path d="M174 216 L156 198 a10 10 0 0 1 18 -14 a10 10 0 0 1 18 14Z" fill="#f48fb1"/>']},
+{id:'sandwich',t:'Sandwich',e:'🥪',
+ n:['Bottom bread','Ham','Cheese','Lettuce','Tomato','Top bread'],i:['🍞','🥓','🧀','🥬','🍅','🥪'],
+ base:plate,
+ p:[c=>'<rect x="34" y="238" width="132" height="26" rx="8" fill="#f1d49b"/>',
+  c=>'<path d="M30 226 q10 14 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 V240 H30Z" fill="#f4a6b0"/>',
+  c=>'<path d="M34 208 H166 V224 H34Z" fill="#ffc928"/>',
+  c=>lett,
+  c=>'<g fill="#e63946"><ellipse cx="64" cy="190" rx="16" ry="7"/><ellipse cx="100" cy="190" rx="16" ry="7"/><ellipse cx="136" cy="190" rx="16" ry="7"/></g>',
+  c=>'<rect x="34" y="140" width="132" height="44" rx="14" fill="#f1d49b"/><path d="M52 160 H148" stroke-width="2" opacity=".4"/>']},
+{id:'suitcase',t:'Suitcase',e:'🧳',h:'Pack a Suitcase!',
+ n:['Suitcase','Passport','Sunglasses','Camera','Flip-flop','Sun hat'],i:['🧳','📘','🕶️','📷','🩴','👒'],
+ base:'<ellipse cx="100" cy="284" rx="80" ry="7" fill="#dfe6ee" stroke="none"/>',
+ p:[c=>`<rect x="26" y="176" width="148" height="104" rx="14" fill="${c}"/><rect x="80" y="156" width="40" height="22" rx="8"/><path d="M60 176 V280 M140 176 V280" opacity=".4"/><rect x="92" y="196" width="16" height="12" rx="3" fill="#ffd23f"/>`,
+  c=>'<rect x="22" y="22" width="46" height="62" rx="5" fill="#1f3a6e"/><circle cx="45" cy="48" r="11" fill="#ffd23f" stroke-width="2"/><path d="M33 70 H57" stroke="#ffd23f" stroke-width="3"/>',
+  c=>'<g fill="#222"><rect x="8" y="106" width="40" height="28" rx="12"/><rect x="58" y="106" width="40" height="28" rx="12"/></g><path d="M48 116 H58"/>',
+  c=>'<rect x="112" y="104" width="52" height="36" rx="6" fill="#555"/><circle cx="138" cy="122" r="11" fill="#bfe6ff"/><rect x="120" y="98" width="12" height="8" fill="#555"/>',
+  c=>'<ellipse cx="34" cy="158" rx="14" ry="20" fill="#2a9d8f"/><path d="M24 150 L34 164 L44 150"/>',
+  c=>`<ellipse cx="136" cy="68" rx="52" ry="12" fill="#f0d28a"/><path d="M104 66 q0 -44 32 -44 q32 0 32 44Z" fill="#f0d28a"/><path d="M106 58 H166" stroke="${c}" stroke-width="7"/>`]},
+{id:'tent',t:'Tent',e:'⛺',h:'Pitch a Tent!',
+ n:['Tent','Door','Ropes & pegs','Campfire','Trees','Moon & stars'],i:['⛺','🚪','📌','🔥','🌲','🌙'],
+ base:'<rect x="0" y="232" width="200" height="50" fill="#8fd18a" stroke="none"/><path d="M0 232 H200"/>',
+ p:[c=>`<path d="M100 92 L36 232 H164Z" fill="${c}"/>`,
+  c=>'<path d="M100 122 L76 232 H124Z" fill="#2b2b3a"/><path d="M100 122 V232" stroke-width="2"/>',
+  c=>'<path d="M68 162 L22 246 M132 162 L178 246" stroke-width="2"/><g fill="#8b5a2b"><path d="M18 246 h8 l-4 12Z"/><path d="M174 246 h8 l-4 12Z"/></g>',
+  c=>'<path d="M80 266 L122 254 M80 254 L122 266" stroke="#7a4a21" stroke-width="6"/><path d="M101 226 q-16 16 0 32 q16 -16 0 -32Z" fill="#ff9f1c"/><path d="M101 242 q-7 8 0 15 q7 -7 0 -15Z" fill="#ffe066" stroke-width="2"/>',
+  c=>'<g fill="#2e8b57"><path d="M17 122 L30 170 H4Z"/><path d="M17 156 L32 226 H2Z"/><path d="M183 122 L196 170 H170Z"/><path d="M183 156 L198 226 H168Z"/></g>',
+  c=>'<path d="M100 46 a16 16 0 1 0 14 24 a13 13 0 0 1 -14 -24Z" fill="#ffd86b"/><g fill="#ffd23f" stroke="none"><circle cx="50" cy="40" r="3"/><circle cx="150" cy="30" r="3"/><circle cx="136" cy="64" r="2.5"/><circle cx="66" cy="72" r="2.5"/></g>']},
+{id:'roast',t:'Roast Dinner',e:'🍗',h:'Plate up a Roast!',
+ n:['Roast meat','Potatoes','Yorkshire pud','Carrots','Greens','Gravy'],i:['🍗','🥔','🧁','🥕','🥦','🥣'],
+ base:'<circle cx="100" cy="150" r="92" fill="#fff"/><circle cx="100" cy="150" r="72" stroke-width="1.5" opacity=".5"/>',
+ p:[c=>'<ellipse cx="100" cy="112" rx="44" ry="28" fill="#b5651d"/><path d="M70 106 q30 -14 60 0" stroke-width="2" opacity=".5"/>',
+  c=>'<g fill="#e8b04b"><ellipse cx="60" cy="172" rx="18" ry="13"/><ellipse cx="92" cy="198" rx="18" ry="13"/></g>',
+  c=>'<path d="M124 168 q2 -20 20 -20 q18 0 20 20 q-20 12 -40 0Z" fill="#e9c46a"/>',
+  c=>'<g fill="#f28c28"><rect x="28" y="126" width="38" height="10" rx="5" transform="rotate(-8 47 131)"/><rect x="30" y="140" width="38" height="10" rx="5" transform="rotate(6 49 145)"/></g>',
+  c=>'<g fill="#43a047" stroke-width="2"><circle cx="126" cy="198" r="7"/><circle cx="140" cy="205" r="7"/><circle cx="116" cy="210" r="7"/><circle cx="150" cy="192" r="7"/></g>',
+  c=>'<path d="M72 128 q28 22 56 0 q-6 22 -28 24 q-24 -2 -28 -24Z" fill="#6b4423" stroke="none" opacity=".85"/>']},
+{id:'dj',t:'DJ Booth',e:'🎧',h:'Set up the DJ Booth!',
+ n:['Left deck','Right deck','Mixer','Headphones','Disco ball','Music notes'],i:['💿','📀','🎛️','🎧','✨','🎵'],
+ base:'<rect x="6" y="130" width="188" height="130" rx="12" fill="#3a3a4f"/>',
+ p:[c=>`<circle cx="46" cy="196" r="34" fill="#111"/><circle cx="46" cy="196" r="22" stroke="#666" stroke-width="1.5"/><circle cx="46" cy="196" r="10" fill="${c}" stroke-width="2"/>`,
+  c=>`<circle cx="154" cy="196" r="34" fill="#111"/><circle cx="154" cy="196" r="22" stroke="#666" stroke-width="1.5"/><circle cx="154" cy="196" r="10" fill="${c}" stroke-width="2"/>`,
+  c=>'<rect x="82" y="150" width="36" height="96" rx="6" fill="#8d99ae"/><path d="M91 168 V232 M100 168 V232 M109 168 V232" stroke-width="2"/><g fill="#ffd23f" stroke-width="2"><rect x="87" y="190" width="8" height="12"/><rect x="96" y="210" width="8" height="12"/><rect x="105" y="180" width="8" height="12"/></g>',
+  c=>`<path d="M54 104 V84 q0 -42 46 -42 q46 0 46 42 V104" stroke-width="7"/><rect x="42" y="92" width="18" height="34" rx="7" fill="${c}"/><rect x="140" y="92" width="18" height="34" rx="7" fill="${c}"/>`,
+  c=>'<path d="M176 4 V22" stroke-width="2"/><circle cx="176" cy="40" r="18" fill="#cfd8e3"/><path d="M158 40 H194 M176 22 V58 M163 28 Q176 40 163 52 M189 28 Q176 40 189 52" stroke-width="1.5"/>',
+  c=>'<path d="M18 74 V44 L34 40 V70" stroke-width="3"/><circle cx="14" cy="76" r="6" fill="#14284b"/><circle cx="30" cy="72" r="6" fill="#14284b"/>']},
+{id:'fishing',t:'Fishing Rod',e:'🎣',h:'Rig a Fishing Rod!',
+ n:['Rod','Reel','Line','Bobber','Hook','Fish'],i:['🎣','⚙️','🧵','🔴','🪝','🐟'],
+ base:'<rect x="0" y="190" width="200" height="94" fill="#9fd3f0" stroke="none"/><path d="M0 190 q12 -8 25 0 t25 0 t25 0 t25 0 t25 0 t25 0 t25 0 t25 0" stroke-width="2.5"/>',
+ p:[c=>'<path d="M14 150 L148 28" stroke="#8b5a2b" stroke-width="5"/><path d="M14 150 L40 126" stroke-width="9"/>',
+  c=>'<circle cx="44" cy="124" r="10" fill="#cfd8e3"/><path d="M44 114 V134"/>',
+  c=>'<path d="M148 28 Q176 90 158 174" stroke-width="1.5"/>',
+  c=>'<circle cx="158" cy="180" r="9" fill="#fff"/><path d="M149 180 a9 9 0 0 1 18 0Z" fill="#e63946" stroke-width="2"/>',
+  c=>'<path d="M158 190 V224 q0 12 -12 10 q-6 -2 -4 -8" stroke-width="3"/>',
+  c=>`<g fill="${c}"><ellipse cx="108" cy="240" rx="28" ry="16"/><path d="M82 240 L58 224 V256Z"/></g><circle cx="124" cy="235" r="3" fill="#14284b" stroke="none"/>`]}
+];
+const th=id=>THEMES.find(t=>t.id===id)||THEMES[0];
+function art(parts,c,w){
+  const t=th(S&&S.theme),h=new Set(parts),back=t.b||[],part=i=>h.has(i+1)?t.p[i](c):'';
+  return `<svg viewBox="0 0 200 300" width="${w}" role="img" aria-label="${t.t}, ${h.size} of 6 parts"><g stroke="#14284b" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" fill="none">`+
+    back.map(part).join('')+t.base+t.p.map((f,i)=>back.includes(i)?'':part(i)).join('')+`</g></svg>`;
 }
 
 /* ---------- Dice roll overlay ---------- */
@@ -95,12 +204,12 @@ function connect(q){
   es.onerror=()=>{if(es.readyState===2){if(isHost){localStorage.removeItem('snowHost');location.reload()}else{S=null;msg='This room has ended. Ask the host for a new code.';draw()}}};
 }
 function incoming(n){
-  pending=n;const L=n.last;
+  pending=n;const L=n.last,t=th(n.theme);
   if(first){seen=L?L.seq:0;first=false}
   else if(L&&L.seq>seen){
     seen=L.seq;const p=n.players.find(p=>p.id===L.id);
-    if(isHost){fx(L.n,`${p.name} rolled ${L.n}: ${NAMES[L.n-1]}${L.isNew?'!':' (already has it)'}`);hold=Date.now()+1000;if(L.isNew){flash=L.id;setTimeout(()=>flash=null,1600)}}
-    else if(me&&L.id===me.id){navigator.vibrate&&navigator.vibrate(60);fx(L.n,L.isNew?`You got: ${ICON[L.n-1]} ${NAMES[L.n-1]}!`:`${NAMES[L.n-1]} — you already have it`);hold=Date.now()+1000}
+    if(isHost){fx(L.n,`${p.name} rolled ${L.n}: ${t.n[L.n-1]}${L.isNew?'!':' (already has it)'}`);hold=Date.now()+1000;if(L.isNew){flash=L.id;setTimeout(()=>flash=null,1600)}}
+    else if(me&&L.id===me.id){navigator.vibrate&&navigator.vibrate(60);fx(L.n,L.isNew?`You got: ${t.i[L.n-1]} ${t.n[L.n-1]}!`:`${t.n[L.n-1]} — you already have it`);hold=Date.now()+1000}
   }
   clearTimeout(rt);rt=setTimeout(()=>{S=pending;draw()},Math.max(0,hold-Date.now()));
 }
@@ -110,13 +219,14 @@ const nameOf=id=>(S.players.find(p=>p.id===id)||{}).name;
 /* ---------- Host screen (iPad / laptop) ---------- */
 function drawHost(){
   if(!S){app.innerHTML='<h1>⛄ Build a Snowman!</h1><p class="hint">Setting up your room…</p>';return}
-  const url=`${location.origin}/?room=${S.code}`;
-  const head=`<div class="top"><h1>⛄ Build a Snowman!</h1>`;
+  const t=th(S.theme),url=`${location.origin}/?room=${S.code}`;
+  const head=`<div class="top"><h1>${t.e} ${t.h||'Build a '+t.t+'!'}</h1>`;
   if(S.phase==='lobby'){
     app.innerHTML=head+`</div><div class="card lobby">
       <div class="join"><div><div>Join on your phone with room code</div><b class="code">${S.code}</b><small>${esc(url)}</small></div><div id="qr"></div></div>
       <div class="modes"><button class="btn alt ${S.mode==='simul'?'on':''}" data-a="mode" data-v="simul">Everyone rolls together</button>
       <button class="btn alt ${S.mode==='turns'?'on':''}" data-a="mode" data-v="turns">Take turns</button></div>
+      <div class="themes">${THEMES.map(x=>`<button class="btn alt ${x.id===S.theme?'on':''}" data-a="theme" data-v="${x.id}">${x.e} ${x.t}</button>`).join('')}</div>
       <div class="chips">${S.players.length?S.players.map(p=>`<span class="chip" style="background:${p.color}">${esc(p.name)}</span>`).join(''):'<span>Waiting for players to join…</span>'}</div>
       <button class="btn" data-a="start" ${S.players.length?'':'disabled'}>Start game</button></div>`;
     if(!qrEl&&window.QRCode){qrEl=document.createElement('div');try{new QRCode(qrEl,{text:url,width:150,height:150})}catch(e){qrEl=null}}
@@ -125,11 +235,11 @@ function drawHost(){
   }
   const w=S.players.length<=2?240:S.players.length<=4?190:150;
   const status=S.mode==='simul'?`Round ${S.round} · everyone rolls once`:`${esc(S.players[S.turn].name)}'s turn`;
-  app.innerHTML=head+`<div class="status">${status}</div></div><div class="grid">`+S.players.map((p,i)=>{
+  app.innerHTML=head+`<div class="status">${status}</div></div><div class="legend">${t.n.map((n,i)=>`<span><b class="no">${i+1}</b> ${t.i[i]} ${n}</span>`).join('')}</div><div class="grid">`+S.players.map((p,i)=>{
     const turn=S.mode==='turns'&&i===S.turn&&S.phase==='play';
     const st=!p.on?'disconnected':S.mode==='simul'?(p.rolled?'✓ rolled':'waiting…'):(turn?(p.rolled?'✓ rolled':'rolling…'):'');
-    return `<div class="card pc ${p.on?'':'off'} ${turn?'turn':''} ${flash===p.id?'flash':''}" style="--c:${p.color}"><h3>${esc(p.name)}</h3>${snowman(p.parts,p.color,w)}
-      <div class="got">${p.parts.sort().map(n=>ICON[n-1]).join('')}</div><div class="st">${p.parts.length}/6 · ${st}</div></div>`}).join('')+`</div>`;
+    return `<div class="card pc ${p.on?'':'off'} ${turn?'turn':''} ${flash===p.id?'flash':''}" style="--c:${p.color}"><h3>${esc(p.name)}</h3>${art(p.parts,p.color,w)}
+      <div class="got">${p.parts.sort().map(n=>t.i[n-1]).join('')}</div><div class="st">${p.parts.length}/6 · ${st}</div></div>`}).join('')+`</div>`;
   if(S.phase==='over'){
     const names=S.winners.map(nameOf).map(esc);
     app.insertAdjacentHTML('beforeend',`<div class="over"><div class="card"><h2>🏆 ${names.length>1?names.join(' & ')+' tie!':names[0]+' wins!'}</h2>
@@ -138,18 +248,18 @@ function drawHost(){
 }
 app.onclick=async e=>{
   const a=e.target.closest('[data-a]');if(!a||!isHost)return;
-  try{await api({a:a.dataset.a,room:S.code,hostKey:hk,mode:a.dataset.v})}catch(x){alert(x)}
+  try{await api({a:a.dataset.a,room:S.code,hostKey:hk,mode:a.dataset.v,theme:a.dataset.v})}catch(x){alert(x)}
 };
 
 /* ---------- Phone controller ---------- */
 function drawPhone(){
-  const top=`<div class="top"><h1>⛄ Snowman</h1></div>`;
+  const tt=th(S&&S.theme),top=`<div class="top"><h1>${tt.e} ${tt.t}</h1></div>`;
   if(!me){
     app.innerHTML=top+`<div class="phone"><div class="card"><p>Room <b>${esc(room)}</b></p><input id="nm" maxlength="14" placeholder="Your name" autocomplete="off"><button class="btn roll" id="go">Join game</button></div>${msg?`<p class="err">${esc(msg)}</p>`:''}</div>`;
     $('#go').onclick=join;$('#nm').onkeydown=e=>{if(e.key==='Enter')join()};return;
   }
   if(!S){app.innerHTML=top+`<p class="hint ${msg?'err':''}">${esc(msg||'Connecting…')}</p>`;return}
-  const p=S.players.find(p=>p.id===me.id);
+  const t=tt,p=S.players.find(p=>p.id===me.id);
   if(!p){app.innerHTML=top+'<p class="hint err">You are not in this game.</p>';return}
   const myTurn=S.mode==='simul'||S.players[S.turn].id===p.id;
   const can=S.phase==='play'&&!S.busy&&!p.rolled&&myTurn;
@@ -158,8 +268,8 @@ function drawPhone(){
   else if(S.phase==='over')hint=S.winners.includes(p.id)?'🏆 You won!':`${esc(S.winners.map(nameOf).join(' & '))} won this time.`;
   else if(S.mode==='simul')hint=p.rolled?'Nice! Waiting for the others…':`Round ${S.round}: tap to roll!`;
   else hint=myTurn?(p.rolled?'Nice roll!':'Your turn — tap to roll!'):`${esc(S.players[S.turn].name)} is rolling…`;
-  app.innerHTML=top+`<div class="phone"><div class="hint">${hint}</div><div class="card ${flash===p.id?'flash':''}" style="border:6px solid ${p.color}">${snowman(p.parts,p.color,200)}</div>
-    <div class="parts">${NAMES.map((n,i)=>`<span class="${p.parts.includes(i+1)?'have':''}">${ICON[i]} ${n}</span>`).join('')}</div>
+  app.innerHTML=top+`<div class="phone"><div class="hint">${hint}</div><div class="card ${flash===p.id?'flash':''}" style="border:6px solid ${p.color}">${art(p.parts,p.color,200)}</div>
+    <div class="parts">${t.n.map((n,i)=>`<span class="${p.parts.includes(i+1)?'have':''}"><b class="no">${i+1}</b> ${t.i[i]} ${n}</span>`).join('')}</div>
     ${S.phase==='play'?`<button class="btn roll" id="roll" ${can?'':'disabled'}>🎲 Roll</button>`:''}</div>`;
   const r=$('#roll');if(r)r.onclick=()=>{r.disabled=true;api({a:'roll',room,key:me.key}).catch(x=>{msg=x;draw()})};
 }
