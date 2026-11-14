@@ -6,6 +6,7 @@ const tok = () => crypto.randomBytes(8).toString('hex');
 const newCode = () => { let c; do { c = Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ'[crypto.randomInt(24)]).join(''); } while (rooms.has(c)); return c; };
 const lcr = require('./lcr');
 const page = fs.readFileSync(path.join(__dirname, 'index.html'));
+const hub = fs.readFileSync(path.join(__dirname, 'hub.html'));
 const lcrPage = fs.readFileSync(path.join(__dirname, 'lcr.html'));
 const full = p => p.parts.size >= PARTS;
 
@@ -119,9 +120,10 @@ http.createServer((q, s) => {
     return;
   }
   const route = u.pathname.replace(/\/+$/, '') || '/';
-  if (route === '/version') { s.writeHead(200, { 'Content-Type': 'text/plain' }); return s.end('server v3: snowman at / and LCR at /lcr'); }
+  if (route === '/version') { s.writeHead(200, { 'Content-Type': 'text/plain' }); return s.end('server v4: hub at /, Dice Draw at /dice-draw, LCR at /lcr'); }
   if (route === '/lcr' || route === '/lcr.html') { s.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return s.end(lcrPage); }
-  s.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); s.end(page);
+  const dice = route === '/dice-draw' || (route === '/' && u.searchParams.has('room')); // old phone links (/?room=) still reach Dice Draw
+  s.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); s.end(dice ? page : hub);
 }).listen(PORT, () => console.log('Game running on http://localhost:' + PORT));
 
 setInterval(() => {

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KB Digital Games Online</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#101a33;--orange:#ff5a36}
+*{box-sizing:border-box}
+body{margin:0;background:#e8edf6;color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,"Segoe UI",sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.wrap{max-width:1100px;margin:0 auto;padding:36px 22px 60px}
+header{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:26px}
+h1{margin:0;font-size:clamp(34px,6vw,58px);font-weight:800;letter-spacing:-1.5px}h1 span{color:var(--orange)}
+.count{background:var(--ink);color:#fff;border-radius:999px;padding:8px 18px;font-weight:700;font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:24px}
+.card{position:relative;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 10px 30px rgba(16,26,51,.1);display:flex;flex-direction:column}
+.card svg{display:block;width:100%;height:auto}
+.tag{position:absolute;top:14px;right:14px;background:#fff;border-radius:999px;padding:5px 13px;font-weight:700;font-size:13px}
+.body{padding:20px 22px 24px;display:flex;flex-direction:column;gap:8px;flex:1}
+h2{margin:0;font-size:24px;font-weight:800}.body p{margin:0 0 10px;color:#5b6784;line-height:1.5;font-weight:500;flex:1}
+.play{align-self:flex-start;background:var(--orange);color:#fff;text-decoration:none;font-weight:700;padding:11px 26px;border-radius:999px;font-size:17px}
+.play:hover{filter:brightness(1.08)}.play:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.how{margin-top:34px;color:#5b6784;font-weight:500;line-height:1.6}
+details{margin-top:18px;background:#fff;border-radius:18px;padding:14px 20px}summary{font-weight:700;cursor:pointer}
+.lnk{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}.lnk b{min-width:110px}.lnk code{flex:1;word-break:break-all;background:#eef2f9;border-radius:10px;padding:6px 10px}
+.lnk button{font:inherit;font-weight:700;border:0;border-radius:999px;padding:7px 16px;background:var(--ink);color:#fff;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>KB Digital Games <span>Online</span></h1><span class="count">2 games</span></header>
+<div class="grid">
+ <div class="card">
+  <svg viewBox="0 0 330 210" aria-hidden="true"><rect width="330" height="210" fill="#1f5fa8"/>
+   <g transform="translate(120 105) rotate(-14)"><rect x="-48" y="-48" width="96" height="96" rx="18" fill="#fff"/><g fill="#14284b"><circle cx="-24" cy="-24" r="7"/><circle cx="24" cy="-24" r="7"/><circle cx="0" cy="0" r="7"/><circle cx="-24" cy="24" r="7"/><circle cx="24" cy="24" r="7"/></g></g>
+   <g transform="translate(207 118) rotate(14)"><rect x="-44" y="-44" width="88" height="88" rx="17" fill="#ff5a36"/><g fill="#fff"><circle cx="-20" cy="-20" r="7"/><circle cx="0" cy="0" r="7"/><circle cx="20" cy="20" r="7"/></g></g></svg>
+  <span class="tag">Phones join</span>
+  <div class="body"><h2>Dice Draw</h2><p>Everyone joins from their own phone, rolls the dice and races to build the picture first. Snowman, pizza, burger, tent and 8 more themes.</p><a class="play" href="/dice-draw">Play</a></div>
+ </div>
+ <div class="card">
+  <svg viewBox="0 0 330 210" aria-hidden="true"><rect width="330" height="210" fill="#0f5c35"/><ellipse cx="165" cy="108" rx="148" ry="82" fill="#1b8a50" stroke="#6b4423" stroke-width="9"/>
+   <g font-family="Arial,sans-serif" font-weight="800" font-size="42" text-anchor="middle">
+    <g transform="translate(95 102) rotate(-10)"><rect x="-34" y="-34" width="68" height="68" rx="14" fill="#fff"/><text y="15" fill="#14284b">L</text></g>
+    <g transform="translate(165 112)"><rect x="-34" y="-34" width="68" height="68" rx="14" fill="#fff"/><text y="15" fill="#14284b">C</text></g>
+    <g transform="translate(235 102) rotate(9)"><rect x="-34" y="-34" width="68" height="68" rx="14" fill="#fff"/><text y="15" fill="#14284b">R</text></g></g>
+   <g fill="#f4c430" stroke="#9a6b00" stroke-width="3"><circle cx="62" cy="158" r="13"/><circle cx="268" cy="160" r="13"/><circle cx="165" cy="168" r="13"/><circle cx="108" cy="52" r="11"/><circle cx="224" cy="50" r="11"/></g></svg>
+  <span class="tag">Phones join</span>
+  <div class="body"><h2>Left Centre Right</h2><p>The classic pass-the-tokens dice game on a poker-style table. Set the token value, seat everyone and play for as many rounds as you like. Up to 16 players.</p><a class="play" href="/lcr">Play</a></div>
+ </div>
+</div>
+<p class="how">Open a game on the iPad or laptop to host it. Players then scan the QR code or type the room code on their own phones.</p>
+<details><summary>Direct links (for your offline library)</summary>
+ <div class="lnk"><b>All games</b><code data-p="/"></code><button>Copy</button></div>
+ <div class="lnk"><b>Dice Draw</b><code data-p="/dice-draw"></code><button>Copy</button></div>
+ <div class="lnk"><b>Left Centre Right</b><code data-p="/lcr"></code><button>Copy</button></div>
+</details>
+</div>
+<script>
+document.querySelectorAll('.lnk').forEach(r=>{const c=r.querySelector('code'),b=r.querySelector('button');c.textContent=location.origin+c.dataset.p;
+ b.onclick=async()=>{try{await navigator.clipboard.writeText(c.textContent);b.textContent='Copied ✓'}catch(e){const s=getSelection(),g=document.createRange();g.selectNodeContents(c);s.removeAllRanges();s.addRange(g);b.textContent='Selected'}setTimeout(()=>b.textContent='Copy',1600)}});
+</script>
+</body>
+</html>

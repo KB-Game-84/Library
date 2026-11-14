@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Left Centre Right</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -56,10 +59,13 @@ input[type=checkbox]{width:26px;height:26px}.prow{display:flex;align-items:cente
 .hint{color:#fff;font-weight:600;font-size:20px;min-height:26px}.err{color:#ffb3b3}.nb{display:flex;justify-content:space-between;gap:8px;font-size:15px;color:#5a6f92}
 .mini{display:flex;gap:6px;justify-content:center;margin-top:8px}.mini .d3{width:48px;font-size:26px}
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important}}
+#fs{position:fixed;right:12px;bottom:12px;z-index:20;width:48px;height:48px;border-radius:50%;border:0;background:rgba(255,255,255,.85);color:#14284b;font-size:24px;line-height:1;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.3)}
+.home{background:rgba(255,255,255,.9);color:#14284b;text-decoration:none;font-weight:600;border-radius:999px;padding:8px 18px}
 </style>
 </head>
 <body>
 <div id="app"></div>
+<button id="fs" aria-label="Full screen" title="Full screen">⛶</button>
 <div id="fx"><div class="row"></div><p></p></div>
 <script>
 const $=s=>document.querySelector(s),app=$('#app');
@@ -106,7 +112,7 @@ function drawHost(){
   if(S.phase==='lobby'&&['INPUT','SELECT'].includes((document.activeElement||{}).tagName))return;
   const N=S.players.length,url=`${location.origin}/lcr?room=${S.code}`,cur=nm(S.players,S.turn);
   const status=S.phase==='lobby'?`Waiting for players · ${N}/16`:`Round ${S.round}/${S.set.rounds} · ${esc(cur)}'s turn ↻`;
-  let h=`<div class="top"><h1>🎲 Left Centre Right</h1><div class="status">${status}</div></div>`;
+  let h=`<div class="top"><h1>🎲 Left Centre Right</h1><div class="status">${status}</div>${S.phase==='lobby'?'<a class="home" href="/">All games</a>':''}</div>`;
   if(S.phase==='lobby'){
     h+=`<div class="lob"><div class="stack">
       <div class="card join"><div><div>Join on your phone with code</div><b class="code">${S.code}</b><small>${esc(url)}</small></div><div id="qr"></div></div>
@@ -177,6 +183,13 @@ function start(j){me=j;msg='';localStorage['lcr_'+room]=JSON.stringify(j);draw()
   else{const saved=JSON.parse(localStorage['lcr_'+room]||'null');
     if(saved){try{start(await api({a:'join',room,key:saved.key}))}catch(x){msg=x;drawPhone()}}else drawPhone()}
 })();
+</script>
+<script>
+(()=>{const b=document.getElementById('fs'),d=document.documentElement,req=d.requestFullscreen||d.webkitRequestFullscreen,
+ on=()=>document.fullscreenElement||document.webkitFullscreenElement;
+ if(!req||new URLSearchParams(location.search).has('room')){b.hidden=true;return}
+ b.onclick=()=>on()?(document.exitFullscreen||document.webkitExitFullscreen).call(document):req.call(d);
+ const u=()=>{b.textContent=on()?'✕':'⛶'};document.addEventListener('fullscreenchange',u);document.addEventListener('webkitfullscreenchange',u)})();
 </script>
 </body>
 </html>
