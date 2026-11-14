@@ -118,7 +118,9 @@ http.createServer((q, s) => {
     });
     return;
   }
-  if (u.pathname === '/lcr') { s.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return s.end(lcrPage); }
+  const route = u.pathname.replace(/\/+$/, '') || '/';
+  if (route === '/version') { s.writeHead(200, { 'Content-Type': 'text/plain' }); return s.end('server v3: snowman at / and LCR at /lcr'); }
+  if (route === '/lcr' || route === '/lcr.html') { s.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return s.end(lcrPage); }
   s.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); s.end(page);
 }).listen(PORT, () => console.log('Game running on http://localhost:' + PORT));
 
