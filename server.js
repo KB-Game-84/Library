@@ -5,17 +5,21 @@ const COLORS = ['#e63946', '#2a9d8f', '#f4a261', '#6a4c93', '#1d7ed8', '#e76f9b'
 const tok = () => crypto.randomBytes(8).toString('hex');
 const newCode = () => { let c; do { c = Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ'[crypto.randomInt(24)]).join(''); } while (rooms.has(c)); return c; };
 const lcr = require('./lcr');
+const rush = require('./rush');
+const mods = { lcr, rush };
 const page = fs.readFileSync(path.join(__dirname, 'index.html'));
 const hub = fs.readFileSync(path.join(__dirname, 'hub.html'));
+const rushPage = fs.readFileSync(path.join(__dirname, 'rush.html'));
 const lcrPage = fs.readFileSync(path.join(__dirname, 'lcr.html'));
 const full = p => p.parts.size >= PARTS;
 
 const viewDice = r => ({ code: r.code, theme: r.theme, mode: r.mode, phase: r.phase, round: r.round, turn: r.turn, last: r.last, winners: r.winners, busy: r.busy,
   players: r.players.map(p => ({ id: p.id, name: p.name, color: p.color, parts: [...p.parts], rolled: p.rolled, on: p.on })) });
-const view = r => (r.game === 'lcr' ? lcr.view(r) : viewDice(r));
+const view = r => (Object.hasOwn(mods, r.game) ? mods[r.game].view(r) : viewDice(r));
 const push = r => { r.touch = Date.now(); const s = 'data: ' + JSON.stringify(view(r)) + '\n\n'; r.clients.forEach(c => c.res.write(s)); };
 const presence = r => r.players.forEach(p => { p.on = [...r.clients].some(c => c.key === p.key); });
 lcr.init({ rooms, newCode, tok, push });
+rush.init({ rooms, newCode, tok, push });
 const hostOnly = (r, b) => { if (r.hostKey !== b.hostKey) throw 'Not the host'; };
 const clear = r => { r.players.forEach(p => { p.parts = new Set(); p.rolled = false; }); r.winners = []; r.last = null; r.round = 1; r.turn = 0; r.busy = false; clearTimeout(r.timer); r.timer = null; };
 
@@ -97,7 +101,7 @@ http.createServer((q, s) => {
     s.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
     const c = { res: s, key: u.searchParams.get('key') || '' };
     r.clients.add(c); presence(r); push(r);
-    q.on('close', () => { r.clients.delete(c); presence(r); push(r); if (r.game !== 'lcr') settle(r); });
+    q.on('close', () => { r.clients.delete(c); presence(r); push(r); if (!r.game) settle(r); });
     return;
   }
   if (u.pathname === '/api' && q.method === 'POST') {
@@ -107,7 +111,8 @@ http.createServer((q, s) => {
       try {
         const b = JSON.parse(d || '{}');
         const r = rooms.get(b.room);
-        const G = (b.game === 'lcr' || (r && r.game === 'lcr')) ? lcr.A : A;
+        const gm = Object.hasOwn(mods, b.game) ? b.game : (r && Object.hasOwn(mods, r.game) ? r.game : null);
+        const G = gm ? mods[gm].A : A;
         if (!Object.hasOwn(G, b.a)) throw 'Bad request';
         if (b.a !== 'host' && !r) throw 'Room not found';
         const out = G[b.a](b, r) || {};
@@ -120,7 +125,8 @@ http.createServer((q, s) => {
     return;
   }
   const route = u.pathname.replace(/\/+$/, '') || '/';
-  if (route === '/version') { s.writeHead(200, { 'Content-Type': 'text/plain' }); return s.end('server v5: hub at /, Dice Draw at /dice-draw, LCR at /lcr'); }
+  if (route === '/version') { s.writeHead(200, { 'Content-Type': 'text/plain' }); return s.end('server v6: hub at /, Dice Draw at /dice-draw, LCR at /lcr, Emoji Rush at /emoji-rush'); }
+  if (route === '/emoji-rush') { s.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return s.end(rushPage); }
   if (route === '/lcr' || route === '/lcr.html') { s.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return s.end(lcrPage); }
   const dice = route === '/dice-draw' || (route === '/' && u.searchParams.has('room')); // old phone links (/?room=) still reach Dice Draw
   s.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); s.end(dice ? page : hub);
